@@ -4,6 +4,7 @@
 """
 
 import json
+import logging
 from enum import Enum
 from pathlib import Path
 from typing import Optional
@@ -19,6 +20,16 @@ app = typer.Typer(
 )
 
 
+def setup_logging(verbose: bool = False) -> None:
+    """配置日志输出"""
+    level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(
+        level=level,
+        format="%(message)s",
+        handlers=[logging.StreamHandler()],
+    )
+
+
 class WhisperModel(str, Enum):
     """Whisper 模型大小"""
     tiny = "tiny"
@@ -30,40 +41,32 @@ class WhisperModel(str, Enum):
 
 def print_header(video_path: str) -> None:
     """打印程序头部信息"""
-    print("=" * 60)
     print("智能视频分割工具")
-    print("=" * 60)
-    print(f"输入视频: {video_path}\n")
+    print(f"输入: {video_path}")
+    print()
 
 
 def print_progress(step: int, total: int, title: str) -> None:
     """打印进度信息"""
     print(f"[{step}/{total}] {title}")
-    print("-" * 40)
 
 
 def print_result(result) -> None:
     """打印分析结果"""
     analysis = result.analysis_result
+    print()
+    print(f"镜头切换: {len(analysis.shot_changes)} | 切分点: {len(analysis.final_splits)} | 跳过: {len(analysis.skipped_shots)}")
 
-    print(f"\n原始镜头切换点: {len(analysis.shot_changes)} 个")
-    print(f"最终切分点: {len(analysis.final_splits)} 个")
-    print(f"被跳过的切换点: {len(analysis.skipped_shots)} 个")
+    if analysis.final_splits:
+        print()
+        print("切分点:")
+        for split in analysis.final_splits:
+            print(f"  {split.timestamp:.2f}s - {split.reason.value}")
 
-    if analysis.skipped_shots:
-        print("\n被跳过的镜头切换（因语音连续）:")
-        for timestamp, reason in analysis.skipped_shots[:5]:
-            print(f"  - {timestamp:.2f}s: {reason}")
-        if len(analysis.skipped_shots) > 5:
-            print(f"  ... 还有 {len(analysis.skipped_shots) - 5} 个")
-
-    print("\n最终切分点:")
-    for split in analysis.final_splits:
-        print(f"  - {split.timestamp:.2f}s ({split.reason.value})")
-
-    print(f"\n分割后将产生 {len(result.segments_info)} 个片段:")
+    print()
+    print(f"片段 ({len(result.segments_info)}):")
     for seg in result.segments_info:
-        print(f"  片段 {seg.index}: {seg.start:.2f}s - {seg.end:.2f}s (时长: {seg.duration:.2f}s)")
+        print(f"  #{seg.index}: {seg.start:.2f}s ~ {seg.end:.2f}s ({seg.duration:.2f}s)")
 
 
 def export_to_json(filepath: str, result) -> None:
@@ -84,7 +87,7 @@ def export_to_json(filepath: str, result) -> None:
     }
     with open(filepath, "w", encoding="utf-8") as f:
         json.dump(export_data, f, ensure_ascii=False, indent=2)
-    print(f"\n分析结果已导出到: {filepath}")
+    print(f"导出: {filepath}")
 
 
 @app.command()
@@ -99,12 +102,15 @@ def main(
     min_segment: float = typer.Option(2.0, "-s", "--min-seg", help="最小片段时长（秒）"),
     no_split: bool = typer.Option(False, "-n", "--no-split", help="只分析不分割"),
     export_json: Optional[Path] = typer.Option(None, "-e", "--export", help="导出 JSON"),
+    verbose: bool = typer.Option(False, "--verbose", help="显示详细日志"),
 ) -> None:
     """
     智能视频分割工具
 
     结合镜头检测和说话人变化检测，智能判断视频切分点。
     """
+    setup_logging(verbose)
+
     # 延迟导入避免启动时加载模型
     from .pipeline import PipelineConfig, VideoPipeline
 
@@ -130,13 +136,13 @@ def main(
 
     # 分割视频
     if not no_split and result.analysis_result.final_splits:
-        print("\n" + "=" * 60)
-        print("开始分割视频")
-        print("=" * 60)
+        print()
+        print("分割视频...")
         output_dir = str(output) if output else None
         pipeline.split_video(result, output_dir)
 
-    print("\n完成!")
+    print()
+    print("完成")
 
 
 if __name__ == "__main__":

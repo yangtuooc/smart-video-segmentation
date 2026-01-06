@@ -3,11 +3,14 @@
 使用 Whisper 识别视频中的语音内容和时间戳
 """
 
+import logging
 from typing import List
 
 import whisper
 
 from .models import SpeechSegment
+
+logger = logging.getLogger(__name__)
 
 
 class SpeechRecognizer:
@@ -22,9 +25,9 @@ class SpeechRecognizer:
             language: 语音语言代码
         """
         self._language = language
-        print(f"正在加载 Whisper {model_size} 模型...")
+        logger.info("正在加载 Whisper %s 模型...", model_size)
         self._model = whisper.load_model(model_size)
-        print("模型加载完成")
+        logger.info("模型加载完成")
 
     def recognize(self, audio_path: str) -> List[SpeechSegment]:
         """
@@ -36,7 +39,7 @@ class SpeechRecognizer:
         Returns:
             语音片段列表
         """
-        print("正在识别语音...")
+        logger.info("正在识别语音...")
         result = self._model.transcribe(
             audio_path,
             language=self._language,

@@ -3,11 +3,14 @@
 根据切分点将视频分割为多个片段
 """
 
+import logging
 import os
 import subprocess
 from typing import List
 
 from .models import SplitPoint
+
+logger = logging.getLogger(__name__)
 
 
 class VideoSplitter:
@@ -58,10 +61,10 @@ class VideoSplitter:
             self._export_segment(input_path, output_path, start, duration)
             output_paths.append(output_path)
 
-            print(f"已导出片段 {i}: {start:.2f}s - {end:.2f}s")
+            logger.info("已导出片段 %d: %.2fs - %.2fs", i, start, end)
 
-        print(f"\n视频分割完成，共 {len(output_paths)} 个片段")
-        print(f"输出目录: {output_dir}")
+        logger.info("视频分割完成，共 %d 个片段", len(output_paths))
+        logger.info("输出目录: %s", output_dir)
 
         return output_paths
 
