@@ -1,135 +1,107 @@
 # Smart Video Segmentation
 
-Intelligent video segmentation tool based on deep learning.
+智能视频分割工具 - 基于深度学习的视频自动切分方案
 
-## Overview
+## 概述
 
-This tool combines **shot detection** and **speaker recognition** to intelligently determine optimal video split points. Suitable for ad material segmentation, video editing preprocessing, etc.
+本工具结合**镜头检测**和**说话人识别**技术，智能判断视频的最佳切分点。适用于广告素材拆分、视频剪辑预处理等场景。
 
-## Features
+## 功能特性
 
-- 🎬 **Shot Boundary Detection** - TransNetV2 deep learning model
-- 🎤 **Speech Recognition** - OpenAI Whisper with multi-language support
-- 👥 **Speaker Recognition** - Resemblyzer embeddings + automatic clustering
-- 🧠 **Smart Decision** - Multi-signal fusion for split point determination
-- ✂️ **Video Export** - FFmpeg lossless splitting
+- 🎬 **镜头边界检测** - TransNetV2 深度学习模型
+- 🎤 **语音识别** - OpenAI Whisper 多语言支持
+- 👥 **说话人识别** - Resemblyzer 嵌入向量 + 自动聚类
+- 🧠 **智能决策** - 多信号融合判断切分点
+- ✂️ **视频导出** - FFmpeg 无损分割
 
-## Requirements
+## 环境要求
 
-- Python 3.8+
-- FFmpeg (must be installed and added to PATH)
+- Python 3.9+
+- FFmpeg（需要预先安装并添加到 PATH）
 
-## Installation
+## 安装
 
 ```bash
-# Clone the project
-git clone <repository-url>
+# 克隆项目
+git clone https://github.com/yangtuooc/smart-video-segmentation.git
 cd smart-video-segmentation
 
-# Install dependencies
-pip install -r requirements.txt
+# 安装（开发模式）
+pip install -e .
 ```
 
-## Quick Start
+## 快速开始
 
 ```bash
-# Analyze and split video
-python main.py input.mp4
+# 分析并分割视频
+sseg input.mp4
 
-# Analyze only, no splitting
-python main.py input.mp4 --no-split
+# 仅分析，不分割
+sseg input.mp4 -n
 
-# Specify output directory
-python main.py input.mp4 -o ./output
+# 指定输出目录
+sseg input.mp4 -o ./output
 
-# Export analysis results to JSON
-python main.py input.mp4 --export-json result.json --no-split
+# 导出分析结果为 JSON
+sseg input.mp4 -e result.json -n
+
+# 查看帮助
+sseg -h
 ```
 
-## Usage
+## 命令行参数
 
-### Command Line Arguments
+| 参数 | 简写 | 默认值 | 说明 |
+|------|------|--------|------|
+| `--output` | `-o` | `./segments` | 输出目录 |
+| `--model` | `-m` | `base` | Whisper 模型: tiny, base, small, medium, large |
+| `--lang` | `-l` | `zh` | 语音语言代码 |
+| `--threshold` | `-t` | `0.5` | 镜头检测阈值 (0-1) |
+| `--min-seg` | `-s` | `2.0` | 最小片段时长 (秒) |
+| `--no-split` | `-n` | - | 仅分析，不分割视频 |
+| `--export` | `-e` | - | 导出分析结果到 JSON |
+| `--verbose` | - | - | 显示详细日志 |
 
-```
-python main.py <video> [options]
-```
-
-| Argument | Type | Default | Description |
-|----------|------|---------|-------------|
-| `video` | str | required | Input video file path |
-| `-o, --output` | str | `./segments` | Output directory |
-| `--whisper-model` | str | `base` | Whisper model: `tiny`, `base`, `small`, `medium`, `large` |
-| `--language` | str | `zh` | Speech language code |
-| `--shot-threshold` | float | `0.5` | Shot detection threshold (0-1) |
-| `--min-segment` | float | `2.0` | Minimum segment duration (seconds) |
-| `--no-split` | flag | - | Analyze only, don't split video |
-| `--export-json` | str | - | Export analysis results to JSON |
-
-### Output Example
+## 输出示例
 
 ```
-============================================================
-Smart Video Segmentation Tool
-============================================================
-Input video: example.mp4
+智能视频分割工具
+输入: example.mp4
 
-[1/4] Shot Detection
-----------------------------------------
-Loading TransNetV2 model...
-Detected 8 shot changes
-Video duration: 139.60 seconds
+[1/4] 镜头检测
+[2/4] 语音识别
+[3/4] 说话人变化检测
+[4/4] 智能分析
 
-[2/4] Speech Recognition
-----------------------------------------
-Recognized 52 speech segments
+镜头切换: 8 | 切分点: 2 | 跳过: 6
 
-[3/4] Speaker Change Detection
-----------------------------------------
-Auto-detected 4 speakers (Silhouette Score: 0.365)
-Detected 3 speaker change points
+切分点:
+  37.97s - 镜头切换且说话人变化
+  101.60s - 镜头切换且说话人变化
 
-[4/4] Smart Analysis
-----------------------------------------
-Final split points: 2
-  - 37.97s (shot change with speaker change)
-  - 101.60s (shot change with speaker change)
+片段 (3):
+  #0: 0.00s ~ 37.97s (37.97s)
+  #1: 37.97s ~ 101.60s (63.63s)
+  #2: 101.60s ~ 139.60s (38.00s)
 
-Will produce 3 segments:
-  Segment 0: 0.00s - 37.97s (duration: 37.97s)
-  Segment 1: 37.97s - 101.60s (duration: 63.63s)
-  Segment 2: 101.60s - 139.60s (duration: 38.00s)
+完成
 ```
 
-### JSON Output Format
-
-```json
-{
-  "video": "example.mp4",
-  "duration": 139.60,
-  "shot_changes": [5.93, 37.97, ...],
-  "speech_segments": [
-    {"start": 0.00, "end": 7.72, "text": "..."}
-  ],
-  "final_splits": [
-    {"timestamp": 37.97, "reason": "shot change with speaker change", "confidence": 0.9}
-  ],
-  "segments": [
-    {"index": 0, "start": 0.0, "end": 37.97, "duration": 37.97}
-  ]
-}
-```
-
-## Architecture
+## 项目结构
 
 ```
 smart-video-segmentation/
-├── main.py                    # Entry point, argument parsing, workflow orchestration
-├── models.py                  # Data models (SpeechSegment, SplitPoint, etc.)
-├── utils.py                   # Utilities (audio extraction, video duration)
-├── shot_detector.py           # Shot detection (TransNetV2)
-├── speech_recognizer.py       # Speech recognition (Whisper)
-├── speaker_change_detector.py # Speaker detection (Resemblyzer + Clustering)
-├── smart_segmenter.py         # Smart fusion decision
-├── video_splitter.py          # Video splitting (FFmpeg)
-└── requirements.txt
+├── src/
+│   └── smart_segmenter/
+│       ├── cli.py                    # CLI 入口
+│       ├── pipeline.py               # 业务流程编排
+│       ├── shot_detector.py          # 镜头检测 (TransNetV2)
+│       ├── speech_recognizer.py      # 语音识别 (Whisper)
+│       ├── speaker_change_detector.py # 说话人检测 (Resemblyzer)
+│       ├── smart_segmenter.py        # 智能融合决策
+│       ├── video_splitter.py         # 视频分割 (FFmpeg)
+│       ├── models.py                 # 数据模型
+│       └── utils.py                  # 工具函数
+├── pyproject.toml
+└── README.md
 ```
