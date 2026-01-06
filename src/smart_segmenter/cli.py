@@ -79,6 +79,7 @@ def export_to_json(filepath: str, result) -> None:
             {"start": s.start, "end": s.end, "text": s.text}
             for s in result.speech_segments
         ],
+        "speaker_labels": result.speaker_labels,
         "final_splits": [
             {"timestamp": s.timestamp, "reason": s.reason.value, "confidence": s.confidence}
             for s in result.analysis_result.final_splits

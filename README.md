@@ -70,7 +70,7 @@ sseg -h
 
 [1/4] 镜头检测
 [2/4] 语音识别
-[3/4] 说话人变化检测
+[3/4] 说话人分离
 [4/4] 智能分析
 
 镜头切换: 8 | 切分点: 2 | 跳过: 6
@@ -94,10 +94,10 @@ smart-video-segmentation/
 ├── src/
 │   └── smart_segmenter/
 │       ├── cli.py                    # CLI 入口
-│       ├── pipeline.py               # 业务流程编排
+│       ├── pipeline.py               # 视频流程处理
 │       ├── shot_detector.py          # 镜头检测 (TransNetV2)
 │       ├── speech_recognizer.py      # 语音识别 (Whisper)
-│       ├── speaker_change_detector.py # 说话人检测 (Resemblyzer)
+│       ├── speaker_diarizer.py       # 说话人分离 (Resemblyzer)
 │       ├── smart_segmenter.py        # 智能融合决策
 │       ├── video_splitter.py         # 视频分割 (FFmpeg)
 │       ├── models.py                 # 数据模型

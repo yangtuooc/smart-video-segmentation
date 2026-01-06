@@ -56,14 +56,15 @@ smart-video-segmentation/
 ├── src/
 │   └── smart_segmenter/      # 包目录
 │       ├── __init__.py
-│       ├── cli.py            # Typer CLI 入口
-│       ├── shot_detector.py
-│       ├── speech_recognizer.py
-│       ├── speaker_change_detector.py
-│       ├── smart_segmenter.py
-│       ├── video_splitter.py
-│       ├── models.py
-│       └── utils.py
+│       ├── cli.py            # CLI 层：参数解析、输出格式化
+│       ├── pipeline.py       # 视频流程处理
+│       ├── shot_detector.py  # 镜头检测 (TransNetV2)
+│       ├── speech_recognizer.py  # 语音识别 (Whisper)
+│       ├── speaker_diarizer.py   # 说话人分离 (Resemblyzer)
+│       ├── smart_segmenter.py    # 智能融合决策
+│       ├── video_splitter.py     # 视频分割 (FFmpeg)
+│       ├── models.py         # 数据模型
+│       └── utils.py          # 工具函数
 ├── tests/
 ├── pyproject.toml            # 项目配置（依赖、构建、脚本）
 ├── README.md

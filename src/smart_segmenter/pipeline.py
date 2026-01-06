@@ -5,12 +5,12 @@
 
 import os
 from dataclasses import dataclass
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional
 
 from .models import AnalysisResult, SegmentInfo, SpeechSegment
 from .shot_detector import ShotDetector
 from .smart_segmenter import SmartSegmenter
-from .speaker_change_detector import SpeakerChangeDetector
+from .speaker_diarizer import SpeakerDiarizer
 from .speech_recognizer import SpeechRecognizer
 from .utils import extract_audio, get_video_duration
 from .video_splitter import VideoSplitter
@@ -32,7 +32,7 @@ class PipelineResult:
     video_duration: float
     shot_changes: List[float]
     speech_segments: List[SpeechSegment]
-    speaker_changes: List[Tuple[float, float]]
+    speaker_labels: List[int]
     analysis_result: AnalysisResult
     segments_info: List[SegmentInfo]
 
@@ -79,14 +79,14 @@ class VideoPipeline:
             )
             speech_segments = speech_recognizer.recognize(audio_path)
 
-            report(3, 4, "说话人变化检测")
-            speaker_detector = SpeakerChangeDetector()
-            speaker_changes = speaker_detector.analyze_segments(audio_path, speech_segments)
+            report(3, 4, "说话人分离")
+            diarizer = SpeakerDiarizer()
+            speaker_labels = diarizer.diarize(audio_path, speech_segments)
 
             report(4, 4, "智能分析")
             segmenter = SmartSegmenter(min_segment_duration=self._config.min_segment_duration)
             analysis_result = segmenter.analyze(
-                shot_changes, speech_segments, video_duration, speaker_changes
+                shot_changes, speech_segments, video_duration, speaker_labels
             )
 
         segments_info = SmartSegmenter.get_segments_info(
@@ -98,7 +98,7 @@ class VideoPipeline:
             video_duration=video_duration,
             shot_changes=shot_changes,
             speech_segments=speech_segments,
-            speaker_changes=speaker_changes,
+            speaker_labels=speaker_labels,
             analysis_result=analysis_result,
             segments_info=segments_info,
         )

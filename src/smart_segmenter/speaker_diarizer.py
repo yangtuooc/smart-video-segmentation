@@ -1,5 +1,5 @@
 """
-说话人变化检测模块
+说话人分离模块
 使用 resemblyzer 预训练模型提取说话人嵌入向量进行聚类
 """
 
@@ -24,58 +24,56 @@ SAMPLE_RATE = 16000  # 采样率
 MAX_SPEAKERS = 10  # 最大说话人数量
 
 
-class SpeakerChangeDetector:
-    """说话人变化检测器（基于 resemblyzer）"""
+class SpeakerDiarizer:
+    """说话人分离器（基于 resemblyzer）"""
 
     def __init__(self):
         logger.info("正在加载说话人嵌入模型...")
         self._encoder = VoiceEncoder()
         logger.info("说话人嵌入模型加载完成")
 
-    def analyze_segments(
+    def diarize(
             self,
             audio_path: str,
             speech_segments: List[SpeechSegment]
-    ) -> List[Tuple[float, float]]:
+    ) -> List[int]:
         """
-        分析语音片段，找出说话人变化的位置
+        对语音片段进行说话人分离
 
         Args:
             audio_path: 音频文件路径（wav 格式）
             speech_segments: 语音片段列表
 
         Returns:
-            说话人变化点列表 [(时间点, 变化程度), ...]
+            每个片段对应的说话人标签 [0, 0, 1, 1, 0, ...]
         """
         if len(speech_segments) < 2:
-            return []
+            return [0] * len(speech_segments)
 
         logger.info("正在提取说话人特征...")
-
-        # 一次性加载整个音频文件
         full_audio, sr = librosa.load(audio_path, sr=SAMPLE_RATE)
 
-        embeddings = self._extract_all_embeddings(full_audio, sr, speech_segments)
+        embeddings = self._extract_embeddings(full_audio, sr, speech_segments)
         labels = self._cluster_speakers(embeddings)
-        self._log_analysis(speech_segments, labels)
-        return self._generate_change_points(speech_segments, labels)
+        self._log_result(speech_segments, labels)
+        return labels
 
-    def _extract_all_embeddings(
+    def _extract_embeddings(
             self,
             full_audio: np.ndarray,
             sr: int,
             speech_segments: List[SpeechSegment]
     ) -> List[np.ndarray]:
-        """为所有语音片段提取嵌入向量（从已加载的音频中切片）"""
+        """为所有语音片段提取嵌入向量"""
         embeddings = []
         for i, seg in enumerate(speech_segments):
-            emb = self._extract_embedding_from_array(full_audio, sr, seg.start, seg.end)
+            emb = self._extract_embedding(full_audio, sr, seg.start, seg.end)
             embeddings.append(emb)
             if (i + 1) % 10 == 0:
                 logger.debug("已处理 %d/%d 个片段", i + 1, len(speech_segments))
         return embeddings
 
-    def _extract_embedding_from_array(
+    def _extract_embedding(
             self,
             full_audio: np.ndarray,
             sr: int,
@@ -83,14 +81,8 @@ class SpeakerChangeDetector:
             end: float
     ) -> np.ndarray:
         """从音频数组中提取指定时间段的说话人嵌入向量"""
-        # 计算采样点索引
-        start_sample = int(start * sr)
-        end_sample = int(end * sr)
-
-        # 边界检查
-        start_sample = max(0, start_sample)
-        end_sample = min(len(full_audio), end_sample)
-
+        start_sample = max(0, int(start * sr))
+        end_sample = min(len(full_audio), int(end * sr))
         y = full_audio[start_sample:end_sample]
 
         if len(y) < sr * MIN_AUDIO_DURATION:
@@ -104,14 +96,12 @@ class SpeakerChangeDetector:
 
     def _cluster_speakers(self, embeddings: List[np.ndarray]) -> List[int]:
         """对说话人嵌入向量进行聚类"""
-        # 过滤全零向量
         valid_indices = [i for i, emb in enumerate(embeddings) if np.any(emb != 0)]
         if len(valid_indices) < 2:
             return [0] * len(embeddings)
 
         valid_embeddings = np.array([embeddings[i] for i in valid_indices])
 
-        # 自动聚类
         logger.info("正在聚类识别说话人...")
         cluster_labels, _ = self._find_optimal_clusters(valid_embeddings)
 
@@ -136,7 +126,6 @@ class SpeakerChangeDetector:
         best_score = -1
         best_labels = None
         best_n = 2
-        # 限制最大聚类数：不超过样本数-1，也不超过 MAX_SPEAKERS
         max_k = min(n_samples - 1, MAX_SPEAKERS)
 
         for k in range(2, max_k + 1):
@@ -169,23 +158,10 @@ class SpeakerChangeDetector:
         return best_labels, best_n
 
     @staticmethod
-    def _log_analysis(speech_segments: List[SpeechSegment], labels: List[int]) -> None:
-        """记录说话人分析结果"""
-        logger.debug("语音片段说话人分析:")
+    def _log_result(speech_segments: List[SpeechSegment], labels: List[int]) -> None:
+        """记录分离结果"""
+        logger.debug("说话人分离结果:")
         for i, (seg, label) in enumerate(zip(speech_segments, labels)):
-            marker = " *** 说话人切换" if i > 0 and labels[i] != labels[i - 1] else ""
+            marker = " [切换]" if i > 0 and labels[i] != labels[i - 1] else ""
             text_preview = seg.text[:20] + "..." if len(seg.text) > 20 else seg.text
-            logger.debug("  [%d] %.2fs - %.2fs: \"%s\"%s", label, seg.start, seg.end, text_preview, marker)
-
-    @staticmethod
-    def _generate_change_points(
-            speech_segments: List[SpeechSegment],
-            labels: List[int]
-    ) -> List[Tuple[float, float]]:
-        """生成说话人切换点列表"""
-        speaker_changes = []
-        for i in range(1, len(labels)):
-            change_time = speech_segments[i - 1].end
-            change_score = 1.0 if labels[i] != labels[i - 1] else 0.0
-            speaker_changes.append((change_time, change_score))
-        return speaker_changes
+            logger.debug("  Speaker %d: %.2fs-%.2fs \"%s\"%s", label, seg.start, seg.end, text_preview, marker)
