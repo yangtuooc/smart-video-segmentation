@@ -85,35 +85,40 @@ def main():
 
     print_header(args.video)
 
-    # 1. 镜头检测
-    print_section(1, 4, "镜头检测")
-    shot_detector = ShotDetector(threshold=args.shot_threshold)
-    shot_changes = shot_detector.detect(args.video)
-    video_duration = get_video_duration(args.video)
-    print(f"视频时长: {video_duration:.2f} 秒\n")
+    # 提取音频（只提取一次，后续模块共享）
+    from utils import extract_audio
+    with extract_audio(args.video) as audio_path:
+        print(f"音频已提取: {audio_path}\n")
 
-    # 2. 语音识别
-    print_section(2, 4, "语音识别")
-    speech_recognizer = SpeechRecognizer(model_size=args.whisper_model, language=args.language)
-    speech_segments = speech_recognizer.recognize(args.video)
-    print(f"识别到 {len(speech_segments)} 个语音片段\n")
+        # 1. 镜头检测
+        print_section(1, 4, "镜头检测")
+        shot_detector = ShotDetector(threshold=args.shot_threshold)
+        shot_changes = shot_detector.detect(args.video)
+        video_duration = get_video_duration(args.video)
+        print(f"视频时长: {video_duration:.2f} 秒\n")
 
-    # 3. 说话人变化检测
-    print_section(3, 4, "说话人变化检测")
-    speaker_detector = SpeakerChangeDetector()
-    speaker_changes = speaker_detector.analyze_segments(args.video, speech_segments)
+        # 2. 语音识别
+        print_section(2, 4, "语音识别")
+        speech_recognizer = SpeechRecognizer(model_size=args.whisper_model, language=args.language)
+        speech_segments = speech_recognizer.recognize(audio_path)
+        print(f"识别到 {len(speech_segments)} 个语音片段\n")
 
-    if speaker_changes:
-        change_points = [(t, c) for t, c in speaker_changes if c > 0.5]
-        print(f"检测到说话人切换点: {len(change_points)} 个")
-        for t, _ in change_points:
-            print(f"  - {t:.2f}s")
-    print()
+        # 3. 说话人变化检测
+        print_section(3, 4, "说话人变化检测")
+        speaker_detector = SpeakerChangeDetector()
+        speaker_changes = speaker_detector.analyze_segments(audio_path, speech_segments)
 
-    # 4. 智能融合
-    print_section(4, 4, "智能分析")
-    segmenter = SmartSegmenter(min_segment_duration=args.min_segment)
-    result = segmenter.analyze(shot_changes, speech_segments, video_duration, speaker_changes)
+        if speaker_changes:
+            change_points = [(t, c) for t, c in speaker_changes if c > 0.5]
+            print(f"检测到说话人切换点: {len(change_points)} 个")
+            for t, _ in change_points:
+                print(f"  - {t:.2f}s")
+        print()
+
+        # 4. 智能融合
+        print_section(4, 4, "智能分析")
+        segmenter = SmartSegmenter(min_segment_duration=args.min_segment)
+        result = segmenter.analyze(shot_changes, speech_segments, video_duration, speaker_changes)
 
     # 打印分析结果
     print(f"\n原始镜头切换点: {len(result.shot_changes)} 个")

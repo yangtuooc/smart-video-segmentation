@@ -12,13 +12,13 @@ from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import silhouette_score
 
 from models import SpeechSegment
-from utils import extract_audio
 
 # 常量定义
 MIN_AUDIO_DURATION = 0.3  # 最小音频时长（秒）
 MIN_WAV_SAMPLES = 1600  # 最小采样点数
 EMBEDDING_DIM = 256  # 嵌入向量维度
 SAMPLE_RATE = 16000  # 采样率
+MAX_SPEAKERS = 10  # 最大说话人数量
 
 
 class SpeakerChangeDetector:
@@ -31,14 +31,14 @@ class SpeakerChangeDetector:
 
     def analyze_segments(
             self,
-            video_path: str,
+            audio_path: str,
             speech_segments: List[SpeechSegment]
     ) -> List[Tuple[float, float]]:
         """
         分析语音片段，找出说话人变化的位置
 
         Args:
-            video_path: 视频文件路径
+            audio_path: 音频文件路径（wav 格式）
             speech_segments: 语音片段列表
 
         Returns:
@@ -49,29 +49,46 @@ class SpeakerChangeDetector:
 
         print("正在提取说话人特征...")
 
-        with extract_audio(video_path) as audio_path:
-            embeddings = self._extract_all_embeddings(audio_path, speech_segments)
-            labels = self._cluster_speakers(embeddings)
-            self._print_analysis(speech_segments, labels)
-            return self._generate_change_points(speech_segments, labels)
+        # 一次性加载整个音频文件
+        full_audio, sr = librosa.load(audio_path, sr=SAMPLE_RATE)
+
+        embeddings = self._extract_all_embeddings(full_audio, sr, speech_segments)
+        labels = self._cluster_speakers(embeddings)
+        self._print_analysis(speech_segments, labels)
+        return self._generate_change_points(speech_segments, labels)
 
     def _extract_all_embeddings(
             self,
-            audio_path: str,
+            full_audio: np.ndarray,
+            sr: int,
             speech_segments: List[SpeechSegment]
     ) -> List[np.ndarray]:
-        """为所有语音片段提取嵌入向量"""
+        """为所有语音片段提取嵌入向量（从已加载的音频中切片）"""
         embeddings = []
         for i, seg in enumerate(speech_segments):
-            emb = self._extract_embedding(audio_path, seg.start, seg.end)
+            emb = self._extract_embedding_from_array(full_audio, sr, seg.start, seg.end)
             embeddings.append(emb)
             if (i + 1) % 10 == 0:
                 print(f"  已处理 {i + 1}/{len(speech_segments)} 个片段")
         return embeddings
 
-    def _extract_embedding(self, audio_path: str, start: float, end: float) -> np.ndarray:
-        """提取指定时间段的说话人嵌入向量"""
-        y, sr = librosa.load(audio_path, sr=SAMPLE_RATE, offset=start, duration=end - start)
+    def _extract_embedding_from_array(
+            self,
+            full_audio: np.ndarray,
+            sr: int,
+            start: float,
+            end: float
+    ) -> np.ndarray:
+        """从音频数组中提取指定时间段的说话人嵌入向量"""
+        # 计算采样点索引
+        start_sample = int(start * sr)
+        end_sample = int(end * sr)
+
+        # 边界检查
+        start_sample = max(0, start_sample)
+        end_sample = min(len(full_audio), end_sample)
+
+        y = full_audio[start_sample:end_sample]
 
         if len(y) < sr * MIN_AUDIO_DURATION:
             return np.zeros(EMBEDDING_DIM)
@@ -116,7 +133,8 @@ class SpeakerChangeDetector:
         best_score = -1
         best_labels = None
         best_n = 2
-        max_k = n_samples - 1
+        # 限制最大聚类数：不超过样本数-1，也不超过 MAX_SPEAKERS
+        max_k = min(n_samples - 1, MAX_SPEAKERS)
 
         for k in range(2, max_k + 1):
             try:
