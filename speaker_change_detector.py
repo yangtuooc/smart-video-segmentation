@@ -19,7 +19,6 @@ MIN_AUDIO_DURATION = 0.3  # 最小音频时长（秒）
 MIN_WAV_SAMPLES = 1600  # 最小采样点数
 EMBEDDING_DIM = 256  # 嵌入向量维度
 SAMPLE_RATE = 16000  # 采样率
-MAX_SPEAKERS = 5  # 最大说话人数
 
 
 class SpeakerChangeDetector:
@@ -117,7 +116,7 @@ class SpeakerChangeDetector:
         best_score = -1
         best_labels = None
         best_n = 2
-        max_k = min(MAX_SPEAKERS, n_samples - 1)
+        max_k = n_samples - 1
 
         for k in range(2, max_k + 1):
             try:
