@@ -7,7 +7,7 @@ import os
 import subprocess
 from typing import List
 
-from models import SplitPoint
+from .models import SplitPoint
 
 
 class VideoSplitter:

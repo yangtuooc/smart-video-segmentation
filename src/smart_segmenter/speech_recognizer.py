@@ -7,7 +7,7 @@ from typing import List
 
 import whisper
 
-from models import SpeechSegment
+from .models import SpeechSegment
 
 
 class SpeechRecognizer:

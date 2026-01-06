@@ -5,7 +5,7 @@
 
 from typing import List, Tuple
 
-from models import (
+from .models import (
     AnalysisResult,
     SegmentInfo,
     SpeechSegment,

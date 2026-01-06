@@ -11,7 +11,7 @@ from resemblyzer import VoiceEncoder, preprocess_wav
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import silhouette_score
 
-from models import SpeechSegment
+from .models import SpeechSegment
 
 # 常量定义
 MIN_AUDIO_DURATION = 0.3  # 最小音频时长（秒）
