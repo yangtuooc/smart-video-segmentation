@@ -37,15 +37,15 @@ class TimelineWidget(QWidget):
     position_clicked = Signal(float)  # 点击时间位置（秒）
     position_dragged = Signal(float)  # 拖拽时间位置（秒）
 
-    # 颜色定义
-    COLOR_SHOT = QColor(66, 133, 244)      # 蓝色 - 镜头切换
-    COLOR_SPEAKER = QColor(52, 168, 83)    # 绿色 - 说话人变化
-    COLOR_SPLIT = QColor(234, 67, 53)      # 红色 - 切分点
-    COLOR_POSITION = QColor(255, 152, 0)   # 橙色 - 当前位置
-    COLOR_BG = QColor(38, 38, 38)          # 背景色
-    COLOR_TRACK = QColor(60, 60, 60)       # 轨道色
-    COLOR_TICK = QColor(100, 100, 100)     # 刻度色
-    COLOR_TEXT = QColor(200, 200, 200)     # 文本色
+    # 颜色定义 - JetBrains New UI Dark Theme
+    COLOR_SHOT = QColor("#548AF7")         # Blue8 - 镜头切换
+    COLOR_SPEAKER = QColor("#5FAD65")      # Green7 - 说话人变化
+    COLOR_SPLIT = QColor("#DB5C5C")        # Red7 - 切分点
+    COLOR_POSITION = QColor("#E08855")     # Orange6 - 当前位置
+    COLOR_BG = QColor("#1E1F22")           # Gray1 - 背景色
+    COLOR_TRACK = QColor("#393B40")        # Gray3 - 轨道色
+    COLOR_TICK = QColor("#6F737A")         # Gray7 - 刻度色
+    COLOR_TEXT = QColor("#DFE1E5")         # Gray12 - 文本色
 
     # 布局常量
     MARGIN_LEFT = 60   # 左边距（用于标签）

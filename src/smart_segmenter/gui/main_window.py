@@ -34,6 +34,7 @@ from ..pipeline import PipelineConfig, PipelineResult
 from .config_panel import ConfigPanel
 from .segment_list import SegmentList
 from .speech_panel import SpeechTextPanel
+from .styles import get_primary_button_style
 from .timeline_widget import TimelineWidget
 from .video_player import VideoPlayer
 from .worker import AnalyzeWorker, SplitWorker
@@ -142,10 +143,11 @@ class MainWindow(QMainWindow):
         self._config_panel = ConfigPanel()
         layout.addWidget(self._config_panel)
 
-        # 分析按钮
+        # 分析按钮 - 主按钮样式
         self._analyze_btn = QPushButton("Analyze")
         self._analyze_btn.setMinimumHeight(36)
         self._analyze_btn.setToolTip("Run analysis (Ctrl+Enter)")
+        self._analyze_btn.setStyleSheet(get_primary_button_style())
         self._analyze_btn.clicked.connect(self._trigger_analyze)
         self._analyze_btn.setEnabled(False)
         layout.addWidget(self._analyze_btn)

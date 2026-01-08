@@ -18,16 +18,16 @@ from PySide6.QtWidgets import (
 from ..models import SpeechSegment
 
 
-# 说话人颜色
+# 说话人颜色 - JetBrains New UI 色板
 SPEAKER_COLORS = [
-    QColor(66, 133, 244),   # 蓝色
-    QColor(52, 168, 83),    # 绿色
-    QColor(251, 188, 4),    # 黄色
-    QColor(234, 67, 53),    # 红色
-    QColor(171, 71, 188),   # 紫色
-    QColor(0, 172, 193),    # 青色
-    QColor(255, 112, 67),   # 橙色
-    QColor(124, 179, 66),   # 草绿
+    QColor("#548AF7"),   # Blue8
+    QColor("#5FAD65"),   # Green7
+    QColor("#F2C55C"),   # Yellow7
+    QColor("#DB5C5C"),   # Red7
+    QColor("#955AE0"),   # Purple7
+    QColor("#24A394"),   # Teal7
+    QColor("#E5986C"),   # Orange7
+    QColor("#73BD79"),   # Green8
 ]
 
 
@@ -139,9 +139,9 @@ class SpeechTextPanel(QWidget):
             speaker = self._labels[i] if i < len(self._labels) else 0
             color = SPEAKER_COLORS[speaker % len(SPEAKER_COLORS)]
 
-            # 时间标签格式
+            # 时间标签格式 - Gray7
             time_format = QTextCharFormat()
-            time_format.setForeground(QColor(136, 136, 136))
+            time_format.setForeground(QColor("#6F737A"))
 
             # 说话人标签格式
             speaker_format = QTextCharFormat()

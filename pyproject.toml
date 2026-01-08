@@ -49,7 +49,6 @@ dev = [
 ]
 gui = [
     "PySide6>=6.5.0",
-    "pyqtdarktheme>=2.1",
 ]
 
 [project.scripts]

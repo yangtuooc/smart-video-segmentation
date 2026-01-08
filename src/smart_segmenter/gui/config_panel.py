@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QPushButton,
     QVBoxLayout,
@@ -38,27 +39,28 @@ class ConfigPanel(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(12)
 
-        # 视频选择
+        # 视频选择（经典按钮样式）
         video_group = QGroupBox("Video")
         video_layout = QVBoxLayout(video_group)
         video_layout.setContentsMargins(12, 12, 12, 12)
         video_layout.setSpacing(8)
 
-        path_row = QHBoxLayout()
-        path_row.setSpacing(8)
+        # 文件路径显示
+        self._file_label = QLabel("No file selected")
+        self._file_label.setStyleSheet("color: #6F737A;")  # Gray7 - 次要文本
+        video_layout.addWidget(self._file_label)
 
-        self._video_path = QLineEdit()
-        self._video_path.setPlaceholderText("No file selected")
-        self._video_path.setReadOnly(True)
-        path_row.addWidget(self._video_path)
+        # 按钮行
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(8)
 
-        self._browse_btn = QPushButton("...")
-        self._browse_btn.setFixedWidth(32)
-        self._browse_btn.setToolTip("Browse files")
+        self._browse_btn = QPushButton("Choose File...")
         self._browse_btn.clicked.connect(self._browse_video)
-        path_row.addWidget(self._browse_btn)
+        btn_row.addWidget(self._browse_btn)
 
-        video_layout.addLayout(path_row)
+        btn_row.addStretch()
+
+        video_layout.addLayout(btn_row)
         layout.addWidget(video_group)
 
         # 参数配置
@@ -97,9 +99,6 @@ class ConfigPanel(QWidget):
         layout.addWidget(config_group)
         layout.addStretch()
 
-        # 启用拖拽
-        self.setAcceptDrops(True)
-
     def _browse_video(self):
         """选择视频文件"""
         path, _ = QFileDialog.getOpenFileName(
@@ -113,13 +112,16 @@ class ConfigPanel(QWidget):
 
     def _set_video_path(self, path: str):
         """设置视频路径"""
-        self._video_path.setText(path)
         if Path(path).exists():
+            filename = Path(path).name
+            self._file_label.setText(filename)
+            self._file_label.setStyleSheet("color: #DFE1E5;")  # Gray12 - 主要文本
+            self._file_label.setToolTip(path)
             self.video_changed.emit(path)
 
     def _start_analyze(self):
         """开始分析"""
-        video_path = self._video_path.text()
+        video_path = self.get_video_path()
         if not video_path:
             return
 
@@ -141,16 +143,5 @@ class ConfigPanel(QWidget):
 
     def get_video_path(self) -> str:
         """获取当前视频路径"""
-        return self._video_path.text()
-
-    # 拖拽支持
-    def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-
-    def dropEvent(self, event):
-        urls = event.mimeData().urls()
-        if urls:
-            path = urls[0].toLocalFile()
-            if Path(path).suffix.lower() in {".mp4", ".avi", ".mkv", ".mov", ".wmv", ".flv"}:
-                self._set_video_path(path)
+        tooltip = self._file_label.toolTip()
+        return tooltip if tooltip else ""
