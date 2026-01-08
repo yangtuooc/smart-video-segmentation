@@ -6,6 +6,7 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+.venv/
 
 # IDE
 .idea/
@@ -13,11 +14,15 @@ build/
 *.swp
 *.swo
 
+# Claude Code
+.claude/
+
 # macOS
 .DS_Store
 
 # 输出目录
 segments/
+out/
 
 # 视频和音频文件
 *.mp4
