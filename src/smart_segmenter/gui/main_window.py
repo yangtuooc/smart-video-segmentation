@@ -31,6 +31,7 @@ from PySide6.QtWidgets import (
 
 from ..models import SpeechSegment
 from ..pipeline import PipelineConfig, PipelineResult
+from .analysis_panel import AnalysisPanel
 from .config_panel import ConfigPanel
 from .segment_list import SegmentList
 from .speech_panel import SpeechTextPanel
@@ -133,11 +134,11 @@ class MainWindow(QMainWindow):
     def _create_sidebar(self) -> QWidget:
         """创建右侧边栏 - 完整工作流"""
         sidebar = QWidget()
-        sidebar.setMinimumWidth(300)
-        sidebar.setMaximumWidth(420)
+        sidebar.setMinimumWidth(320)
+        sidebar.setMaximumWidth(450)
         layout = QVBoxLayout(sidebar)
         layout.setContentsMargins(4, 8, 8, 8)
-        layout.setSpacing(12)
+        layout.setSpacing(8)
 
         # 1. 视频选择 + 参数配置
         self._config_panel = ConfigPanel()
@@ -169,18 +170,22 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(progress_widget)
 
-        # 2. 结果面板
-        # 片段列表
+        # 2. AI 分析结果面板
+        self._analysis_panel = AnalysisPanel()
+        analysis_section = CollapsiblePanel("分析结果", self._analysis_panel)
+        layout.addWidget(analysis_section)
+
+        # 3. 片段列表
         self._segment_list = SegmentList()
         segments_section = CollapsiblePanel("片段列表", self._segment_list)
         layout.addWidget(segments_section, 1)
 
-        # 语音转录
+        # 4. 语音转录
         self._speech_panel = SpeechTextPanel()
         transcript_section = CollapsiblePanel("语音转录", self._speech_panel)
         layout.addWidget(transcript_section, 1)
 
-        # 3. 导出操作
+        # 5. 导出操作
         export_widget = QWidget()
         export_layout = QHBoxLayout(export_widget)
         export_layout.setContentsMargins(0, 0, 0, 0)
@@ -192,8 +197,8 @@ class MainWindow(QMainWindow):
         self._export_btn.setEnabled(False)
         export_layout.addWidget(self._export_btn)
 
-        self._split_btn = QPushButton("分割视频")
-        self._split_btn.setToolTip("按片段分割视频 (Ctrl+Shift+S)")
+        self._split_btn = QPushButton("导出选中片段")
+        self._split_btn.setToolTip("导出选中的片段 (Ctrl+Shift+S)")
         self._split_btn.clicked.connect(self._split_video)
         self._split_btn.setEnabled(False)
         export_layout.addWidget(self._split_btn)
@@ -336,6 +341,7 @@ class MainWindow(QMainWindow):
         self._timeline.clear()
         self._segment_list.clear()
         self._speech_panel.clear()
+        self._analysis_panel.clear()
         self._result = None
 
         # 启动工作线程
@@ -381,6 +387,13 @@ class MainWindow(QMainWindow):
 
         # 更新语音文本
         self._speech_panel.set_data(result.speech_segments, result.speaker_labels)
+
+        # 更新 AI 分析面板
+        self._analysis_panel.update_stats(
+            result.analysis_result.final_splits,
+            result.video_duration,
+            len(result.segments_info)
+        )
 
         # 恢复控件状态
         self._set_controls_enabled(True)

@@ -1,6 +1,7 @@
 """
 视频播放器组件
 支持播放控制、音量调节、快进快退、键盘快捷键
+使用标准媒体播放器图标
 """
 
 from PySide6.QtCore import Qt, Signal, Slot
@@ -13,6 +14,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QSlider,
+    QStyle,
     QVBoxLayout,
     QWidget,
 )
@@ -24,6 +26,8 @@ class VideoPlayer(QWidget):
     # 信号
     position_changed = Signal(float)  # 时间位置（秒）
     duration_changed = Signal(float)  # 视频时长（秒）
+    prev_segment_requested = Signal()  # 请求上一个片段
+    next_segment_requested = Signal()  # 请求下一个片段
 
     # 常量
     SEEK_STEP = 5.0  # 快进/快退步长（秒）
@@ -71,24 +75,56 @@ class VideoPlayer(QWidget):
         controls_layout.setContentsMargins(10, 5, 10, 5)
         controls_layout.setSpacing(8)
 
-        # 播放控制按钮
-        self._back_btn = QPushButton("-5秒")
-        self._back_btn.setToolTip("快退 5 秒 (左方向键)")
-        self._back_btn.setFixedWidth(40)
+        # 播放控制按钮 - 使用标准图标
+        style = self.style()
+
+        # 上一个片段
+        self._prev_btn = QPushButton()
+        self._prev_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_MediaSkipBackward))
+        self._prev_btn.setToolTip("上一个片段")
+        self._prev_btn.setFixedSize(32, 32)
+        self._prev_btn.setFlat(True)
+        self._prev_btn.clicked.connect(self.prev_segment_requested.emit)
+        controls_layout.addWidget(self._prev_btn)
+
+        # 快退
+        self._back_btn = QPushButton()
+        self._back_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_MediaSeekBackward))
+        self._back_btn.setToolTip("快退 5 秒 (←)")
+        self._back_btn.setFixedSize(32, 32)
+        self._back_btn.setFlat(True)
         self._back_btn.clicked.connect(self._seek_backward)
         controls_layout.addWidget(self._back_btn)
 
-        self._play_btn = QPushButton("播放")
-        self._play_btn.setToolTip("播放/暂停 (空格)")
-        self._play_btn.setFixedWidth(50)
+        # 播放/暂停
+        self._play_btn = QPushButton()
+        self._play_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
+        self._play_btn.setToolTip("播放 (空格)")
+        self._play_btn.setFixedSize(40, 40)
+        self._play_btn.setFlat(True)
         self._play_btn.clicked.connect(self._toggle_play)
         controls_layout.addWidget(self._play_btn)
 
-        self._forward_btn = QPushButton("+5秒")
-        self._forward_btn.setToolTip("快进 5 秒 (右方向键)")
-        self._forward_btn.setFixedWidth(40)
+        # 快进
+        self._forward_btn = QPushButton()
+        self._forward_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_MediaSeekForward))
+        self._forward_btn.setToolTip("快进 5 秒 (→)")
+        self._forward_btn.setFixedSize(32, 32)
+        self._forward_btn.setFlat(True)
         self._forward_btn.clicked.connect(self._seek_forward)
         controls_layout.addWidget(self._forward_btn)
+
+        # 下一个片段
+        self._next_btn = QPushButton()
+        self._next_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_MediaSkipForward))
+        self._next_btn.setToolTip("下一个片段")
+        self._next_btn.setFixedSize(32, 32)
+        self._next_btn.setFlat(True)
+        self._next_btn.clicked.connect(self.next_segment_requested.emit)
+        controls_layout.addWidget(self._next_btn)
+
+        # 分隔
+        controls_layout.addSpacing(16)
 
         # 时间标签
         self._time_label = QLabel("0:00 / 0:00")
@@ -98,21 +134,21 @@ class VideoPlayer(QWidget):
         controls_layout.addStretch()
 
         # 播放速度
-        speed_label = QLabel("速度")
-        controls_layout.addWidget(speed_label)
-
         self._speed_combo = QComboBox()
-        self._speed_combo.setFixedWidth(70)
+        self._speed_combo.setFixedWidth(65)
         for speed in self.SPEED_OPTIONS:
             self._speed_combo.addItem(f"{speed}x", speed)
         self._speed_combo.setCurrentIndex(self.SPEED_OPTIONS.index(1.0))
         self._speed_combo.currentIndexChanged.connect(self._on_speed_changed)
+        self._speed_combo.setToolTip("播放速度")
         controls_layout.addWidget(self._speed_combo)
 
         # 音量控制
-        self._volume_btn = QPushButton("音量")
-        self._volume_btn.setToolTip("静音/取消静音 (M)")
-        self._volume_btn.setFixedWidth(40)
+        self._volume_btn = QPushButton()
+        self._volume_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_MediaVolume))
+        self._volume_btn.setToolTip("静音 (M)")
+        self._volume_btn.setFixedSize(32, 32)
+        self._volume_btn.setFlat(True)
         self._volume_btn.clicked.connect(self._toggle_mute)
         controls_layout.addWidget(self._volume_btn)
 
@@ -120,7 +156,7 @@ class VideoPlayer(QWidget):
         self._volume_slider.setRange(0, 100)
         self._volume_slider.setValue(80)
         self._volume_slider.setFixedWidth(80)
-        self._volume_slider.setToolTip("音量 (上/下方向键)")
+        self._volume_slider.setToolTip("音量 (↑/↓)")
         self._volume_slider.valueChanged.connect(self._on_volume_changed)
         controls_layout.addWidget(self._volume_slider)
 
@@ -248,11 +284,12 @@ class VideoPlayer(QWidget):
 
     def _update_volume_icon(self):
         """更新音量图标"""
+        style = self.style()
         volume = self._volume_slider.value()
         if volume == 0:
-            self._volume_btn.setText("静音")
+            self._volume_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_MediaVolumeMuted))
         else:
-            self._volume_btn.setText("音量")
+            self._volume_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_MediaVolume))
 
     @Slot(int)
     def _on_position_changed(self, ms: int):
@@ -280,11 +317,12 @@ class VideoPlayer(QWidget):
     @Slot(QMediaPlayer.PlaybackState)
     def _on_state_changed(self, state: QMediaPlayer.PlaybackState):
         """播放状态变化"""
+        style = self.style()
         if state == QMediaPlayer.PlaybackState.PlayingState:
-            self._play_btn.setText("暂停")
+            self._play_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_MediaPause))
             self._play_btn.setToolTip("暂停 (空格)")
         else:
-            self._play_btn.setText("播放")
+            self._play_btn.setIcon(style.standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
             self._play_btn.setToolTip("播放 (空格)")
 
     @staticmethod
