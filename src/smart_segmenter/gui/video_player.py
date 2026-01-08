@@ -72,20 +72,20 @@ class VideoPlayer(QWidget):
         controls_layout.setSpacing(8)
 
         # 播放控制按钮
-        self._back_btn = QPushButton("-5s")
-        self._back_btn.setToolTip("Seek backward 5s (Left)")
+        self._back_btn = QPushButton("-5秒")
+        self._back_btn.setToolTip("快退 5 秒 (左方向键)")
         self._back_btn.setFixedWidth(40)
         self._back_btn.clicked.connect(self._seek_backward)
         controls_layout.addWidget(self._back_btn)
 
-        self._play_btn = QPushButton("Play")
-        self._play_btn.setToolTip("Play/Pause (Space)")
+        self._play_btn = QPushButton("播放")
+        self._play_btn.setToolTip("播放/暂停 (空格)")
         self._play_btn.setFixedWidth(50)
         self._play_btn.clicked.connect(self._toggle_play)
         controls_layout.addWidget(self._play_btn)
 
-        self._forward_btn = QPushButton("+5s")
-        self._forward_btn.setToolTip("Seek forward 5s (Right)")
+        self._forward_btn = QPushButton("+5秒")
+        self._forward_btn.setToolTip("快进 5 秒 (右方向键)")
         self._forward_btn.setFixedWidth(40)
         self._forward_btn.clicked.connect(self._seek_forward)
         controls_layout.addWidget(self._forward_btn)
@@ -98,7 +98,7 @@ class VideoPlayer(QWidget):
         controls_layout.addStretch()
 
         # 播放速度
-        speed_label = QLabel("Speed")
+        speed_label = QLabel("速度")
         controls_layout.addWidget(speed_label)
 
         self._speed_combo = QComboBox()
@@ -110,8 +110,8 @@ class VideoPlayer(QWidget):
         controls_layout.addWidget(self._speed_combo)
 
         # 音量控制
-        self._volume_btn = QPushButton("Vol")
-        self._volume_btn.setToolTip("Mute/Unmute (M)")
+        self._volume_btn = QPushButton("音量")
+        self._volume_btn.setToolTip("静音/取消静音 (M)")
         self._volume_btn.setFixedWidth(40)
         self._volume_btn.clicked.connect(self._toggle_mute)
         controls_layout.addWidget(self._volume_btn)
@@ -120,7 +120,7 @@ class VideoPlayer(QWidget):
         self._volume_slider.setRange(0, 100)
         self._volume_slider.setValue(80)
         self._volume_slider.setFixedWidth(80)
-        self._volume_slider.setToolTip("Volume (Up/Down)")
+        self._volume_slider.setToolTip("音量 (上/下方向键)")
         self._volume_slider.valueChanged.connect(self._on_volume_changed)
         controls_layout.addWidget(self._volume_slider)
 
@@ -250,9 +250,9 @@ class VideoPlayer(QWidget):
         """更新音量图标"""
         volume = self._volume_slider.value()
         if volume == 0:
-            self._volume_btn.setText("Mute")
+            self._volume_btn.setText("静音")
         else:
-            self._volume_btn.setText("Vol")
+            self._volume_btn.setText("音量")
 
     @Slot(int)
     def _on_position_changed(self, ms: int):
@@ -281,11 +281,11 @@ class VideoPlayer(QWidget):
     def _on_state_changed(self, state: QMediaPlayer.PlaybackState):
         """播放状态变化"""
         if state == QMediaPlayer.PlaybackState.PlayingState:
-            self._play_btn.setText("Pause")
-            self._play_btn.setToolTip("Pause (Space)")
+            self._play_btn.setText("暂停")
+            self._play_btn.setToolTip("暂停 (空格)")
         else:
-            self._play_btn.setText("Play")
-            self._play_btn.setToolTip("Play (Space)")
+            self._play_btn.setText("播放")
+            self._play_btn.setToolTip("播放 (空格)")
 
     @staticmethod
     def _format_time(seconds: float) -> str:

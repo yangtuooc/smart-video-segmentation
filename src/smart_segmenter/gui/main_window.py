@@ -84,7 +84,7 @@ class MainWindow(QMainWindow):
         self._connect_signals()
 
     def _setup_ui(self):
-        self.setWindowTitle("Smart Video Segmenter")
+        self.setWindowTitle("智能视频分割工具")
         self.setMinimumSize(1280, 800)
 
         # 中心部件
@@ -144,9 +144,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(self._config_panel)
 
         # 分析按钮 - 主按钮样式
-        self._analyze_btn = QPushButton("Analyze")
+        self._analyze_btn = QPushButton("开始分析")
         self._analyze_btn.setMinimumHeight(36)
-        self._analyze_btn.setToolTip("Run analysis (Ctrl+Enter)")
+        self._analyze_btn.setToolTip("运行分析 (Ctrl+Enter)")
         self._analyze_btn.setStyleSheet(get_primary_button_style())
         self._analyze_btn.clicked.connect(self._trigger_analyze)
         self._analyze_btn.setEnabled(False)
@@ -172,12 +172,12 @@ class MainWindow(QMainWindow):
         # 2. 结果面板
         # 片段列表
         self._segment_list = SegmentList()
-        segments_section = CollapsiblePanel("Segments", self._segment_list)
+        segments_section = CollapsiblePanel("片段列表", self._segment_list)
         layout.addWidget(segments_section, 1)
 
         # 语音转录
         self._speech_panel = SpeechTextPanel()
-        transcript_section = CollapsiblePanel("Transcript", self._speech_panel)
+        transcript_section = CollapsiblePanel("语音转录", self._speech_panel)
         layout.addWidget(transcript_section, 1)
 
         # 3. 导出操作
@@ -186,14 +186,14 @@ class MainWindow(QMainWindow):
         export_layout.setContentsMargins(0, 0, 0, 0)
         export_layout.setSpacing(8)
 
-        self._export_btn = QPushButton("Export JSON")
-        self._export_btn.setToolTip("Export analysis results (Ctrl+E)")
+        self._export_btn = QPushButton("导出 JSON")
+        self._export_btn.setToolTip("导出分析结果 (Ctrl+E)")
         self._export_btn.clicked.connect(self._export_json)
         self._export_btn.setEnabled(False)
         export_layout.addWidget(self._export_btn)
 
-        self._split_btn = QPushButton("Split Video")
-        self._split_btn.setToolTip("Split into segments (Ctrl+Shift+S)")
+        self._split_btn = QPushButton("分割视频")
+        self._split_btn.setToolTip("按片段分割视频 (Ctrl+Shift+S)")
         self._split_btn.clicked.connect(self._split_video)
         self._split_btn.setEnabled(False)
         export_layout.addWidget(self._split_btn)
@@ -209,7 +209,7 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(12, 4, 12, 4)
         layout.setSpacing(16)
 
-        self._status_label = QLabel("Ready")
+        self._status_label = QLabel("就绪")
         layout.addWidget(self._status_label)
 
         layout.addStretch()
@@ -225,50 +225,50 @@ class MainWindow(QMainWindow):
         menubar = self.menuBar()
 
         # 文件菜单
-        file_menu = menubar.addMenu("File")
+        file_menu = menubar.addMenu("文件")
 
-        open_action = QAction("Open", self)
+        open_action = QAction("打开", self)
         open_action.setShortcut(QKeySequence.StandardKey.Open)
         open_action.triggered.connect(self._open_video)
         file_menu.addAction(open_action)
 
         file_menu.addSeparator()
 
-        export_action = QAction("Export JSON", self)
+        export_action = QAction("导出 JSON", self)
         export_action.setShortcut(QKeySequence("Ctrl+E"))
         export_action.triggered.connect(self._export_json)
         file_menu.addAction(export_action)
 
         file_menu.addSeparator()
 
-        quit_action = QAction("Quit", self)
+        quit_action = QAction("退出", self)
         quit_action.setShortcut(QKeySequence.StandardKey.Quit)
         quit_action.triggered.connect(self.close)
         file_menu.addAction(quit_action)
 
         # 编辑菜单
-        edit_menu = menubar.addMenu("Edit")
+        edit_menu = menubar.addMenu("编辑")
 
-        analyze_action = QAction("Run Analysis", self)
+        analyze_action = QAction("运行分析", self)
         analyze_action.setShortcut(QKeySequence("Ctrl+Return"))
         analyze_action.triggered.connect(self._trigger_analyze)
         edit_menu.addAction(analyze_action)
 
-        split_action = QAction("Split Video", self)
+        split_action = QAction("分割视频", self)
         split_action.setShortcut(QKeySequence("Ctrl+Shift+S"))
         split_action.triggered.connect(self._split_video)
         edit_menu.addAction(split_action)
 
         # 帮助菜单
-        help_menu = menubar.addMenu("Help")
+        help_menu = menubar.addMenu("帮助")
 
-        shortcuts_action = QAction("Keyboard Shortcuts", self)
+        shortcuts_action = QAction("快捷键", self)
         shortcuts_action.triggered.connect(self._show_shortcuts)
         help_menu.addAction(shortcuts_action)
 
         help_menu.addSeparator()
 
-        about_action = QAction("About", self)
+        about_action = QAction("关于", self)
         about_action.triggered.connect(self._show_about)
         help_menu.addAction(about_action)
 
@@ -294,15 +294,15 @@ class MainWindow(QMainWindow):
         """加载视频到播放器"""
         self._video_player.load(path)
         self._analyze_btn.setEnabled(True)
-        self._status_label.setText(f"Loaded: {path}")
+        self._status_label.setText(f"已加载: {path}")
 
     def _open_video(self):
         """打开视频文件"""
         path, _ = QFileDialog.getOpenFileName(
             self,
-            "Open Video",
+            "打开视频",
             "",
-            "Video Files (*.mp4 *.avi *.mkv *.mov *.wmv *.flv);;All Files (*)"
+            "视频文件 (*.mp4 *.avi *.mkv *.mov *.wmv *.flv);;所有文件 (*)"
         )
         if path:
             self._config_panel._set_video_path(path)
@@ -345,7 +345,7 @@ class MainWindow(QMainWindow):
         self._worker.error.connect(self._on_error)
         self._worker.start()
 
-        self._status_label.setText("Analyzing...")
+        self._status_label.setText("分析中...")
 
     def _set_controls_enabled(self, enabled: bool):
         """设置控件启用状态"""
@@ -360,7 +360,7 @@ class MainWindow(QMainWindow):
         """更新进度"""
         self._progress_bar.setValue(current)
         self._progress_label.setText(message)
-        self._status_label.setText(f"Step {current}/{total}")
+        self._status_label.setText(f"步骤 {current}/{total}")
 
     @Slot(PipelineResult)
     def _on_analyze_finished(self, result: PipelineResult):
@@ -393,9 +393,9 @@ class MainWindow(QMainWindow):
         segments = len(result.segments_info)
         speakers = len(set(result.speaker_labels)) if result.speaker_labels else 0
 
-        self._status_label.setText("Analysis complete")
+        self._status_label.setText("分析完成")
         self._stats_label.setText(
-            f"{segments} segments | {shots} shots | {speakers} speakers"
+            f"{segments} 个片段 | {shots} 个镜头 | {speakers} 个说话人"
         )
 
     @Slot(str)
@@ -405,9 +405,9 @@ class MainWindow(QMainWindow):
         self._set_controls_enabled(True)
         self._progress_bar.setVisible(False)
         self._progress_label.setVisible(False)
-        self._status_label.setText("Analysis failed")
+        self._status_label.setText("分析失败")
 
-        QMessageBox.critical(self, "Error", f"Analysis failed:\n{message}")
+        QMessageBox.critical(self, "错误", f"分析失败:\n{message}")
 
     def _export_json(self):
         """导出 JSON"""
@@ -415,7 +415,7 @@ class MainWindow(QMainWindow):
             return
 
         path, _ = QFileDialog.getSaveFileName(
-            self, "Export Results", "analysis.json", "JSON Files (*.json)"
+            self, "导出结果", "analysis.json", "JSON 文件 (*.json)"
         )
         if not path:
             return
@@ -443,19 +443,19 @@ class MainWindow(QMainWindow):
         with open(path, "w", encoding="utf-8") as f:
             json.dump(export_data, f, ensure_ascii=False, indent=2)
 
-        self._status_label.setText(f"Exported: {path}")
+        self._status_label.setText(f"已导出: {path}")
 
     def _split_video(self):
         """分割视频"""
         if not self._result or not self._result.analysis_result.final_splits:
             return
 
-        output_dir = QFileDialog.getExistingDirectory(self, "Select Output Directory")
+        output_dir = QFileDialog.getExistingDirectory(self, "选择输出目录")
         if not output_dir:
             return
 
         self._set_controls_enabled(False)
-        self._status_label.setText("Splitting video...")
+        self._status_label.setText("正在分割视频...")
 
         self._split_worker = SplitWorker(self._result, output_dir)
         self._split_worker.finished.connect(self._on_split_finished)
@@ -468,9 +468,9 @@ class MainWindow(QMainWindow):
         self._split_worker = None
         self._set_controls_enabled(True)
 
-        self._status_label.setText(f"Split complete - {len(output_files)} files created")
+        self._status_label.setText(f"分割完成 - 已创建 {len(output_files)} 个文件")
         QMessageBox.information(
-            self, "Complete", f"Video split complete!\n\nCreated {len(output_files)} segments"
+            self, "完成", f"视频分割完成！\n\n已创建 {len(output_files)} 个片段"
         )
 
     @Slot(str)
@@ -478,36 +478,36 @@ class MainWindow(QMainWindow):
         """分割错误"""
         self._split_worker = None
         self._set_controls_enabled(True)
-        self._status_label.setText("Split failed")
+        self._status_label.setText("分割失败")
 
-        QMessageBox.critical(self, "Error", f"Split failed:\n{message}")
+        QMessageBox.critical(self, "错误", f"分割失败:\n{message}")
 
     def _show_shortcuts(self):
         """显示快捷键帮助"""
         shortcuts = """
-<h3>Keyboard Shortcuts</h3>
+<h3>快捷键</h3>
 <table>
-<tr><td><b>Ctrl+O</b></td><td>Open video</td></tr>
-<tr><td><b>Ctrl+Enter</b></td><td>Run analysis</td></tr>
-<tr><td><b>Ctrl+E</b></td><td>Export JSON</td></tr>
-<tr><td><b>Ctrl+Shift+S</b></td><td>Split video</td></tr>
+<tr><td><b>Ctrl+O</b></td><td>打开视频</td></tr>
+<tr><td><b>Ctrl+Enter</b></td><td>运行分析</td></tr>
+<tr><td><b>Ctrl+E</b></td><td>导出 JSON</td></tr>
+<tr><td><b>Ctrl+Shift+S</b></td><td>分割视频</td></tr>
 <tr><td colspan="2"><hr></td></tr>
-<tr><td><b>Space</b></td><td>Play / Pause</td></tr>
-<tr><td><b>Left / Right</b></td><td>Seek -5s / +5s</td></tr>
-<tr><td><b>Up / Down</b></td><td>Volume +/- </td></tr>
-<tr><td><b>M</b></td><td>Mute / Unmute</td></tr>
+<tr><td><b>空格</b></td><td>播放 / 暂停</td></tr>
+<tr><td><b>左 / 右</b></td><td>快退 / 快进 5秒</td></tr>
+<tr><td><b>上 / 下</b></td><td>音量 +/-</td></tr>
+<tr><td><b>M</b></td><td>静音 / 取消静音</td></tr>
 </table>
         """
-        QMessageBox.information(self, "Keyboard Shortcuts", shortcuts)
+        QMessageBox.information(self, "快捷键", shortcuts)
 
     def _show_about(self):
         """显示关于对话框"""
         QMessageBox.about(
             self,
-            "About",
-            "<h3>Smart Video Segmenter</h3>"
-            "<p>Intelligent video segmentation using shot detection and speaker diarization.</p>"
-            "<p>Tech: TransNetV2, Whisper, Resemblyzer</p>"
+            "关于",
+            "<h3>智能视频分割工具</h3>"
+            "<p>基于镜头检测和说话人分离的智能视频分割。</p>"
+            "<p>技术栈: TransNetV2, Whisper, Resemblyzer</p>"
         )
 
     @staticmethod

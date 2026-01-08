@@ -121,7 +121,7 @@ class SpeechTextPanel(QWidget):
         # 统计说话人数量
         unique_speakers = set(self._labels) if self._labels else {0}
         num_speakers = len(unique_speakers)
-        self._info_label.setText(f"{len(self._segments)} segments, {num_speakers} speakers")
+        self._info_label.setText(f"{len(self._segments)} 个片段, {num_speakers} 个说话人")
 
         # 更新图例
         for i, label in enumerate(self._legend_labels):

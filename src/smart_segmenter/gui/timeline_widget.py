@@ -114,7 +114,7 @@ class TimelineWidget(QWidget):
 
         if self._duration <= 0:
             painter.setPen(self.COLOR_TEXT)
-            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "Load a video to show timeline")
+            painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, "加载视频以显示时间轴")
             return
 
         track_rect = self._get_track_rect()
@@ -124,9 +124,9 @@ class TimelineWidget(QWidget):
 
         # 绘制轨道
         tracks = [
-            TrackConfig("Shots", self.COLOR_SHOT, self._shot_changes),
-            TrackConfig("Speaker", self.COLOR_SPEAKER, self._speaker_changes),
-            TrackConfig("Splits", self.COLOR_SPLIT, [s.timestamp for s in self._split_points]),
+            TrackConfig("镜头", self.COLOR_SHOT, self._shot_changes),
+            TrackConfig("说话人", self.COLOR_SPEAKER, self._speaker_changes),
+            TrackConfig("切分点", self.COLOR_SPLIT, [s.timestamp for s in self._split_points]),
         ]
         self._draw_tracks(painter, track_rect, tracks)
 
@@ -311,23 +311,23 @@ class TimelineWidget(QWidget):
             self._hover_time = time
 
             # 查找附近的标记点
-            tooltip_lines = [f"Time: {self._format_time(time)}"]
+            tooltip_lines = [f"时间: {self._format_time(time)}"]
             tolerance = self._duration * 0.01  # 1% 容差
 
             for t in self._shot_changes:
                 if abs(t - time) < tolerance:
-                    tooltip_lines.append(f"Shot change: {self._format_time(t)}")
+                    tooltip_lines.append(f"镜头切换: {self._format_time(t)}")
                     break
 
             for t in self._speaker_changes:
                 if abs(t - time) < tolerance:
-                    tooltip_lines.append(f"Speaker change: {self._format_time(t)}")
+                    tooltip_lines.append(f"说话人变化: {self._format_time(t)}")
                     break
 
             for sp in self._split_points:
                 if abs(sp.timestamp - time) < tolerance:
-                    tooltip_lines.append(f"Split point: {self._format_time(sp.timestamp)}")
-                    tooltip_lines.append(f"  Reason: {sp.reason.value}")
+                    tooltip_lines.append(f"切分点: {self._format_time(sp.timestamp)}")
+                    tooltip_lines.append(f"  原因: {sp.reason.value}")
                     break
 
             QToolTip.showText(event.globalPosition().toPoint(), "\n".join(tooltip_lines), self)

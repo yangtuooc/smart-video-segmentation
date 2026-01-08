@@ -38,7 +38,7 @@ class SegmentList(QWidget):
         # 表格
         self._table = QTableWidget()
         self._table.setColumnCount(3)
-        self._table.setHorizontalHeaderLabels(["#", "Time", "Duration"])
+        self._table.setHorizontalHeaderLabels(["#", "时间", "时长"])
         self._table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self._table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self._table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -62,7 +62,7 @@ class SegmentList(QWidget):
         layout.addWidget(self._table, 1)
 
         # 底部信息栏
-        self._info_label = QLabel("No segments")
+        self._info_label = QLabel("无片段")
         self._info_label.setContentsMargins(8, 4, 8, 4)
         layout.addWidget(self._info_label)
 
@@ -72,13 +72,13 @@ class SegmentList(QWidget):
         self._table.setRowCount(len(segments))
 
         if not segments:
-            self._info_label.setText("No segments")
+            self._info_label.setText("无片段")
             return
 
         # 计算统计信息
         total_duration = sum(seg.duration for seg in segments)
         self._info_label.setText(
-            f"{len(segments)} segments | Total: {self._format_duration(total_duration)}"
+            f"{len(segments)} 个片段 | 总时长: {self._format_duration(total_duration)}"
         )
 
         for row, seg in enumerate(segments):
@@ -101,7 +101,7 @@ class SegmentList(QWidget):
         """清空列表"""
         self._segments = []
         self._table.setRowCount(0)
-        self._info_label.setText("No segments")
+        self._info_label.setText("无片段")
 
     def highlight_segment(self, index: int):
         """高亮指定片段"""
@@ -125,7 +125,7 @@ class SegmentList(QWidget):
     def _format_duration(seconds: float) -> str:
         """格式化时长"""
         if seconds < 60:
-            return f"{seconds:.1f}s"
+            return f"{seconds:.1f}秒"
         minutes = int(seconds // 60)
         secs = int(seconds % 60)
-        return f"{minutes}m {secs}s"
+        return f"{minutes}分{secs}秒"
