@@ -47,9 +47,14 @@ dev = [
     "pytest>=7.0.0",
     "ruff>=0.1.0",
 ]
+gui = [
+    "PySide6>=6.5.0",
+    "pyqtdarktheme>=2.1",
+]
 
 [project.scripts]
 sseg = "smart_segmenter.cli:app"
+sseg-gui = "smart_segmenter.gui:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/smart_segmenter"]
